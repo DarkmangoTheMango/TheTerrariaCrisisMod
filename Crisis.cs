@@ -8,5 +8,8 @@ using Terraria.ModLoader;
 namespace Crisis;
 public class Crisis : Mod 
 {
-
+    public Crisis()
+    {
+        MusicSkipsVolumeRemap = true;
+    }
 }
