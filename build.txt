@@ -1,0 +1,3 @@
+displayName = The Terraria Crisis Mod
+author = The Crisis Team
+version = 0.1
