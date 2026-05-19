@@ -1,0 +1,1 @@
+global using Extras = Crisis.Core.AssetReferences.Assets.Images.Extras;

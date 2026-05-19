@@ -1,3 +1,5 @@
 displayName = The Terraria Crisis Mod
 author = The Crisis Team
 version = 0.1
+
+buildIgnore = .tml-build\*, lib\*, .idea\*, .vs\*, *.tmp, Properties\*, *.csproj, *.user, obj\*, bin\*, *.config, .editorconfig, TemplateEngineHost\*

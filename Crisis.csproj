@@ -1,16 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-	<!-- Import tModLoader mod properties -->
+<Project Sdk="Tomat.Terraria.ModLoader.Sdk/2.1.0">
 	<Import Project="..\tModLoader.targets" />
 
-	<!-- General -->
 	<PropertyGroup>
-		
+		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+		<Nullable>enable</Nullable>
+		<NoWarn>$(NoWarn);CS0436</NoWarn>
+
+		<TargetFramework>net10.0</TargetFramework>
+		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
-	<!-- References -->
 	<ItemGroup>
-		
+		<Publicize Include="tModLoader;ReLogic;FNA" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
 	</ItemGroup>
 
 </Project>
