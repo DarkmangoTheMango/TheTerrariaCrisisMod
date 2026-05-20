@@ -1,0 +1,9 @@
+ComputerBoomerang: {
+	DisplayName: .ZIP Bomber
+	Tooltip: ""
+}
+
+BetterDummySpawner: {
+	DisplayName: Smart Dummy
+	Tooltip: ""
+}
