@@ -1,6 +1,6 @@
 ComputerBoomerang: {
 	DisplayName: .ZIP Bomber
-	Tooltip: ""
+	Tooltip: "'Homework.zip'"
 }
 
 BetterDummySpawner: {
