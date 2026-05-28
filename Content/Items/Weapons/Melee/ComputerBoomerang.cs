@@ -1,31 +1,32 @@
 ﻿using Crisis.Content.Dusts;
 using System.IO;
+using System.Reflection;
 using Terraria.DataStructures;
 using Terraria.GameContent;
+using static Crisis.Core.LocalizationReferences.Mods.Crisis.Projectiles;
 
-namespace Crisis.Content.Items.Weapons.Magic;
+namespace Crisis.Content.Items.Weapons.Melee;
 
 public class ComputerBoomerang : ModItem
 {
-    public override string Texture => Assets.Images.Items.Weapons.Magic.ComputerBoomerang.KEY;
+    public override string Texture => Assets.Images.Items.Weapons.Melee.ComputerBoomerang.KEY;
 
     public override void SetDefaults()
     {
         Item.Size = new(16);
         Item.scale = 1f;
 
-        Item.DamageType = DamageClass.Magic;
+        Item.DamageType = DamageClass.Melee;
         Item.noMelee = true;
-        Item.damage = 32;
+        Item.damage = 30;
         Item.knockBack = 4f;
-        Item.mana = 16;
 
         Item.shoot = ModContent.ProjectileType<ComputerBoomerangPro>();
         Item.shootSpeed = 12;
 
         Item.autoReuse = true;
         Item.noUseGraphic = true;
-        Item.useTime = Item.useAnimation = 45;
+        Item.useTime = Item.useAnimation = 20;
         Item.useStyle = ItemUseStyleID.Swing;
         Item.UseSound = SoundID.Item1;
 
@@ -61,25 +62,19 @@ public class ComputerBoomerangPro : ModProjectile
         set;
     }
 
-    private int Damage
-    {
-        get;
-        set;
-    }
-
     #endregion Fields
 
-    public override string Texture => Assets.Images.Items.Weapons.Magic.ComputerBoomerangPro.KEY;
+    public override string Texture => Assets.Images.Items.Weapons.Melee.ComputerBoomerangPro.KEY;
 
     public override void SetStaticDefaults()
     {
-        Main.projFrames[Type] = 3;
+        Main.projFrames[Type] = 2;
     }
 
     public override void SetDefaults()
     {
         Projectile.penetrate = 1;
-        Projectile.DamageType = DamageClass.Magic;
+        Projectile.DamageType = DamageClass.Melee;
         Projectile.friendly = true;
 
         Projectile.Size = new(46);
@@ -109,17 +104,10 @@ public class ComputerBoomerangPro : ModProjectile
 
     #region Behavior
 
-    public override void OnSpawn(IEntitySource source)
-    {
-        Damage = Projectile.damage;
-    }
-
     public override void AI()
     {
         if (Projectile.wet)
             Projectile.Kill();
-
-        Lighting.AddLight(Projectile.Center, State == AIState.Explode ? Color.OrangeRed.ToVector3() * 0.5f : Color.SkyBlue.ToVector3() * 0.5f);
 
         switch (State)
         {
@@ -135,13 +123,10 @@ public class ComputerBoomerangPro : ModProjectile
             default:
                 break;
         }
-
-        Projectile.scale = MathHelper.Lerp(Projectile.scale, 1, 0.2f);
     }
 
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
     {
-        Target = target;
         SwitchState(AIState.Explode);
     }
 
@@ -166,17 +151,10 @@ public class ComputerBoomerangPro : ModProjectile
 
     public override void OnKill(int timeLeft)
     {
-        SoundEngine.PlaySound(SoundID.Item14, Projectile.Center);
         SoundEngine.PlaySound(SoundID.NPCDeath37, Projectile.Center);
 
-        for (int k = 0; k < 3; k++)
-            Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(1, 1) * 10, ModContent.DustType<Smoke>(), Main.rand.NextVector2Circular(1, 1), 0, default, 1);
-
         for (int k = 0; k < 5; k++)
-            Dust.NewDustPerfect(Projectile.Center, DustID.Electric, Main.rand.NextVector2Circular(2, 1) * 3, 0, default, 1);
-
-        for (int k = 0; k < 5; k++)
-            Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, -Vector2.UnitY.RotatedByRandom(0.3f) * Main.rand.NextFloat(5, 15), ModContent.ProjectileType<ComputerBoomerangShard>(), (int)(Damage * 0.2f), Projectile.knockBack * 0.1f, Projectile.owner);
+            Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, -Vector2.UnitY.RotatedByRandom(0.3f) * Main.rand.NextFloat(5, 15), ModContent.ProjectileType<ComputerShard>(), (int)(Owner.HeldItem.damage * 0.2f), Owner.HeldItem.knockBack * 0.1f, Projectile.owner);
     }
 
     private void DoBehavior_Fly()
@@ -187,28 +165,18 @@ public class ComputerBoomerangPro : ModProjectile
             {
                 Projectile.tileCollide = true;
                 Projectile.velocity.Y += 0.5f;
-
-                Projectile.rotation = MathHelper.Lerp(Projectile.rotation, 0, 0.1f);
             }
             else
-            {
-                SoundEngine.PlaySound(new SoundStyle(Assets.Sounds.Custom.ComputerBeep.KEY), Projectile.Center);
-
-                Projectile.scale = 1.4f;
-
                 SwitchState(AIState.Home);
-            }
 
             return;
         }
         else
-        {
             foreach (var npc in Main.ActiveNPCs)
                 if (npc.CanBeChasedBy(Projectile) && Projectile.Distance(npc.Center) < 300f)
                     Target = npc;
 
-            Projectile.rotation = Projectile.velocity.X * 0.2f;
-        }
+        Projectile.rotation = Projectile.velocity.X * 0.2f;
 
         Projectile.velocity *= 0.95f;
 
@@ -217,33 +185,29 @@ public class ComputerBoomerangPro : ModProjectile
 
     private void DoBehavior_Home()
     {
-        Projectile.frame = 1;
-
         if (Target is not null && !Target.active)
             Projectile.Kill();
 
         Projectile.tileCollide = false;
 
         Projectile.velocity = Vector2.Lerp(Projectile.velocity, Projectile.DirectionTo(Target?.Center ?? Vector2.Zero) * 18f, 0.05f);
-        Projectile.rotation += Projectile.velocity.Length() * 0.1f * Math.Sign(Projectile.velocity.X);
+        Projectile.rotation += Projectile.velocity.Length() * 0.1f;
     }
 
     private void DoBehavior_Explode()
     {
-        Projectile.tileCollide = false;
-
-        Projectile.frame = 2;
+        Projectile.frame = 1;
 
         if (Timer <= 0)
         {
-            SoundEngine.PlaySound(new SoundStyle(Assets.Sounds.Custom.ComputerError.KEY), Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle(Assets.Sounds.Custom.ComputerCrash.KEY), Projectile.Center);
 
             Projectile.velocity = -Projectile.velocity.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.25f, 0.5f);
         }
 
         if (Timer >= 1)
         {
-            Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<ComputerBoomerangExplosion>(), Owner.HeldItem.damage, Owner.HeldItem.knockBack * 2, Projectile.owner);
+            Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<ComputerExplosion>(), Owner.HeldItem.damage, Owner.HeldItem.knockBack * 2, Projectile.owner);
 
             Projectile.Kill();
         }
@@ -252,10 +216,7 @@ public class ComputerBoomerangPro : ModProjectile
 
         Projectile.velocity *= 0.95f;
 
-        if (Target is not null && Projectile.Distance(Target.Center) >= 130)
-            Projectile.velocity += Projectile.DirectionTo(Target.Center) * 0.5f;
-
-        Timer += 0.03f;
+        Timer += 0.015f;
     }
 
     private void SwitchState(AIState state)
@@ -273,6 +234,7 @@ public class ComputerBoomerangPro : ModProjectile
     {
         var texture = ModContent.Request<Texture2D>(Texture).Value;
         var glow = ModContent.Request<Texture2D>($"{Texture}_Glow").Value;
+        var glow2 = ModContent.Request<Texture2D>($"{Texture}_Glow2").Value;
 
         var position = Projectile.Center - Main.screenPosition;
 
@@ -284,7 +246,7 @@ public class ComputerBoomerangPro : ModProjectile
 
         if (State == AIState.Explode)
         {
-            Main.spriteBatch.Draw(texture, position + Main.rand.NextVector2Circular(2, 2), sourceRectangle, Projectile.GetAlpha(Color.OrangeRed with { A = 0 }) * Timer, Projectile.rotation, sourceRectangle.Size() / 2f, Projectile.scale * 1.1f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(glow2, position + Main.rand.NextVector2Circular(2, 2), sourceRectangle, Projectile.GetAlpha(Color.OrangeRed with { A = 0 }) * Timer, Projectile.rotation, sourceRectangle.Size() / 2f, Projectile.scale * 1.1f, SpriteEffects.None, 0f);
         }
 
         return false;
@@ -293,32 +255,38 @@ public class ComputerBoomerangPro : ModProjectile
     #endregion Drawing
 }
 
-public class ComputerBoomerangExplosion : ModProjectile
+public class ComputerExplosion : ModProjectile
 {
-    public override string Texture => Assets.Images.Items.Weapons.Magic.ComputerBoomerang.KEY;
+    public override string Texture => Assets.Images.Items.Weapons.Melee.ComputerBoomerang.KEY;
 
     public override void SetDefaults()
     {
         Projectile.penetrate = -1;
-        Projectile.DamageType = DamageClass.Magic;
+        Projectile.DamageType = DamageClass.Melee;
         Projectile.friendly = true;
 
         Projectile.tileCollide = false;
         Projectile.ignoreWater = true;
 
-        Projectile.Size = new(400);
+        Projectile.Size = new(300);
+        Projectile.scale = 1f;
 
         Projectile.usesLocalNPCImmunity = true;
         Projectile.localNPCHitCooldown = -1;
 
-        Projectile.timeLeft = 20;
+        Projectile.alpha = 255;
+        Projectile.hide = true;
+
         Projectile.aiStyle = -1;
         AIType = -1;
-    } 
+    }
 
     public override void OnSpawn(IEntitySource source)
     {
-        SoundEngine.PlaySound(SoundID.Item62, Projectile.Center);
+        SoundEngine.PlaySound(new SoundStyle(Assets.Sounds.Custom.Explosion.KEY)
+        {
+            pitchVariance = 0.1f
+        }, Projectile.Center);
 
         for (int k = 0; k < 20; k++)
         {
@@ -327,31 +295,35 @@ public class ComputerBoomerangExplosion : ModProjectile
         }
 
         CameraSystem.ScreenShake();
-        Projectile.scale = 0.1f;
     }
 
     public override void AI()
     {
-        Projectile.scale = MathHelper.Lerp(Projectile.scale, 2f, 0.1f);
+        if (++Projectile.frameCounter >= 5)
+        {
+            Projectile.frameCounter = 0;
 
-        if (Projectile.timeLeft <= 10)
-            Projectile.alpha = (int)MathHelper.Lerp(Projectile.alpha, 255, 0.5f);
+            if (++Projectile.frame >= Main.projFrames[Type])
+                Projectile.Kill();
+        }
     }
 
     public override bool PreDraw(ref Color lightColor)
     {
-        var texture = TextureAssets.Projectile[ProjectileID.PrincessWeapon].Value;
+        var texture = ModContent.Request<Texture2D>(Texture).Value;
 
-        Main.spriteBatch.Draw(texture, Projectile.Center - Main.screenPosition, texture.Bounds, Projectile.GetAlpha(Color.Red), Projectile.rotation, texture.Size() / 2f, Projectile.scale, SpriteEffects.None, 0f);
-        Main.spriteBatch.Draw(texture, Projectile.Center - Main.screenPosition, texture.Bounds, Projectile.GetAlpha(Color.White), Projectile.rotation, texture.Size() / 2f, Projectile.scale, SpriteEffects.None, 0f);
+        var frameHeight = texture.Height / Main.projFrames[Type];
+        Rectangle sourceRectangle = new(0, frameHeight * Projectile.frame, texture.Width, frameHeight);
+
+        Main.spriteBatch.Draw(texture, Projectile.Center - Main.screenPosition, sourceRectangle, Projectile.GetAlpha(lightColor), Projectile.rotation, new(sourceRectangle.Width / 2f, sourceRectangle.Height - 10), Projectile.scale, SpriteEffects.None, 0f);
 
         return false;
     }
 }
 
-public class ComputerBoomerangShard : ModProjectile
+public class ComputerShard : ModProjectile
 {
-    public override string Texture => Assets.Images.Items.Weapons.Magic.ComputerBoomerangShard.KEY;
+    public override string Texture => Assets.Images.Projectiles.Melee.ComputerShard.KEY;
 
     public override void SetStaticDefaults()
     {
@@ -361,7 +333,7 @@ public class ComputerBoomerangShard : ModProjectile
     public override void SetDefaults()
     {
         Projectile.penetrate = 1;
-        Projectile.DamageType = DamageClass.Magic;
+        Projectile.DamageType = DamageClass.Melee;
         Projectile.friendly = true;
 
         Projectile.Size = new(8);
@@ -371,7 +343,6 @@ public class ComputerBoomerangShard : ModProjectile
         Projectile.localNPCHitCooldown = -1;
         Projectile.stopsDealingDamageAfterPenetrateHits = true;
 
-        Projectile.timeLeft = 120;
         Projectile.aiStyle = -1;
         AIType = -1;
     }
@@ -383,12 +354,8 @@ public class ComputerBoomerangShard : ModProjectile
 
     public override void AI()
     {
-        if (Projectile.wet)
-            Projectile.velocity.Y -= 0.05f;
-        else
-            Projectile.velocity.Y += 0.6f;
-
         Projectile.rotation += Projectile.velocity.X * 0.1f;
+        Projectile.velocity.Y += 0.6f;
         Projectile.velocity *= 0.98f;
 
         if (Projectile.timeLeft <= 20)

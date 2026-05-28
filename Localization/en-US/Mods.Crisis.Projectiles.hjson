@@ -1,3 +1,4 @@
 ComputerBoomerangPro.DisplayName: .ZIP Bomber
 ComputerBoomerangExplosion.DisplayName: .ZIP Bomber
-ComputerBoomerangShard.DisplayName: .ZIP Bomber
+ComputerShard.DisplayName: .ZIP Bomber
+ComputerExplosion.DisplayName: .ZIP Bomber
